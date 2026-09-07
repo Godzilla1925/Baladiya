@@ -245,17 +245,39 @@ document.getElementById('date').valueAsDate=new Date();
 
 /* register */
 const hint=document.getElementById('hint'), seal=document.getElementById('seal'), sealText=document.getElementById('sealText');
-function chosen(){
+
+/* ---- Google Sheet saving ----
+   1) Create a Google Sheet.
+   2) Extensions > Apps Script, paste the doPost script provided separately, and deploy it
+      as a Web App (Execute as: Me, Who has access: Anyone).
+   3) Paste the deployment URL below, between the quotes. */
+const SHEET_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbyCCBDgLUgWebHHnDvEThcvF9ryxE3WkgcP5XyNHCD9qL80dqBAAzmtbjVj3xu9AjCH/exec';
+
+function rawLines(){
   return [...document.querySelectorAll('.f.line')].map(l=>{
     const s=l.querySelector('select'), o=l.querySelector('input');
     return o.hidden ? (s.value==='__own__'?'':s.value) : o.value.trim();
-  }).filter(Boolean);
+  });
+}
+function chosen(){
+  return rawLines().filter(Boolean);
+}
+function saveToSheet(name,g,dateVal,lines){
+  if(!SHEET_WEBAPP_URL || SHEET_WEBAPP_URL.indexOf('PASTE_YOUR')===0) return; // not configured yet
+  const payload={ name:name, grade:g, date:dateVal, pledge1:lines[0]||'', pledge2:lines[1]||'', pledge3:lines[2]||'', submittedAt:new Date().toISOString() };
+  fetch(SHEET_WEBAPP_URL,{
+    method:'POST',
+    mode:'no-cors',              /* Apps Script doesn't send CORS headers; no-cors still delivers the POST */
+    headers:{'Content-Type':'text/plain;charset=utf-8'}, /* keep it a "simple request" so no preflight is needed */
+    body:JSON.stringify(payload)
+  }).catch(()=>{ /* network error only — the card still works offline */ });
 }
 document.getElementById('submitBtn').addEventListener('click',()=>{
-  const name=document.getElementById('name').value.trim(), g=grade.value, picks=chosen();
+  const name=document.getElementById('name').value.trim(), g=grade.value, lines=rawLines(), picks=lines.filter(Boolean);
   if(!name){ hint.className='hint'; hint.textContent='الاسم ناقص — اكتبيه في الحقل الأول.'; document.getElementById('name').focus(); return; }
   if(!g){ hint.className='hint'; hint.textContent='اختاري صفّك من القائمة.'; grade.focus(); return; }
   if(!picks.length){ hint.className='hint'; hint.textContent='اختاري تعهّداً واحداً على الأقل.'; return; }
+  saveToSheet(name,g,document.getElementById('date').value,lines);
   hint.className='hint ok'; hint.textContent='تعهّدك مسجّل. يمكنك طباعة البطاقة الآن.';
   sealText.textContent=name+' — '+g;
   seal.classList.remove('show'); void seal.offsetWidth; seal.classList.add('show');
