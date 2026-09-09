@@ -395,7 +395,7 @@ function wireCard(cfg){
    2) Extensions > Apps Script, paste the doPost script provided separately, and deploy it
       as a Web App (Execute as: Me, Who has access: Anyone).
    3) Paste the deployment URL below, between the quotes. */
-const SHEET_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbxKJmVvpNZRHPaHN0KZAUP-AOtiaCMAjNh4nyMph33TpBRKWCjS-Mabj-HBnvgTurM4/exec';
+const SHEET_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbyk49c3NweFyR7rG8DCG8uUt26khfl-VKd7CzzvMv5f__4ACfP98k2sOMdBID9I2U2k/exec';
 
 function saveToSheet(name,g,dateVal,lines,lang){
   if(!SHEET_WEBAPP_URL || SHEET_WEBAPP_URL.indexOf('PASTE_YOUR')===0) return; // not configured yet
