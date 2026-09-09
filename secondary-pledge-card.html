@@ -364,6 +364,11 @@ html[dir="rtl"] .pline::after{right:auto; left:8px}
     var picks = ['p1','p2','p3'].map(function(id){ return $(id).value; }).filter(function(v){ return v!==''; });
     if(!picks.length){ m.textContent = t.needPledge; $('p1').focus(); return; }
     if(new Set(picks).size !== picks.length){ m.textContent = t.dupe; return; }
+
+    var gradeText = $('grade').options[$('grade').selectedIndex].text;
+    var pledgeTexts = picks.map(function(v){ return t.pledges[parseInt(v,10)]; });
+    saveToSheet($('name').value.trim(), gradeText, $('date').value, pledgeTexts, cur);
+
     m.className = 'msg ok';
     m.textContent = t.done;
   });
@@ -377,6 +382,26 @@ html[dir="rtl"] .pline::after{right:auto; left:8px}
     $('msg').textContent = '';
     $('name').focus();
   });
+
+  /* ---- Google Sheet saving ----
+     Uses the same Apps Script Web App as the Primary and Middle pages —
+     paste the same deployment URL you used there. */
+  var SHEET_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbyk49c3NweFyR7rG8DCG8uUt26khfl-VKd7CzzvMv5f__4ACfP98k2sOMdBID9I2U2k/exec';
+
+  function saveToSheet(name, grade, dateVal, pledgeTexts, lang){
+    if(!SHEET_WEBAPP_URL || SHEET_WEBAPP_URL.indexOf('PASTE_YOUR')===0) return; // not configured yet
+    var payload = {
+      level:'secondary', name:name, grade:grade, date:dateVal,
+      pledge1: pledgeTexts[0]||'', pledge2: pledgeTexts[1]||'', pledge3: pledgeTexts[2]||'',
+      lang: lang||'en', submittedAt: new Date().toISOString()
+    };
+    fetch(SHEET_WEBAPP_URL, {
+      method:'POST',
+      mode:'no-cors',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify(payload)
+    }).catch(function(){ /* network error only — the card still works offline */ });
+  }
 })();
 </script>
 </body>
